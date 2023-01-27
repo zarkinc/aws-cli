@@ -39,3 +39,5 @@ runs:
         echo "IP: $IP"
         echo "THIS_IP: $THIS_IP"
         echo "ACTION: $ACTION"
+        rule=$(aws ec2 describe-security-group-rules --filter Name="group-id",Values="$SG_ID" | jq ".[] | .[] | select(.CidrIpv4==\"$THIS_IP/32\")")
+        echo $rule
