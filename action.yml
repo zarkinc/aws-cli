@@ -35,12 +35,12 @@ runs:
           THIS_IP="$IP"
         fi
         sudo apt install jq -y
-        echo "Security group id: $SG_ID"
-        echo "IP: $IP"
-        echo "THIS_IP: $THIS_IP"
+        echo "-------------------------------"
+        echo "Updating SG: $SG_ID"
+        echo "IP: $THIS_IP"
         echo "ACTION: $ACTION"
+        echo "-------------------------------"
         rule=$(aws ec2 describe-security-group-rules --filter Name="group-id",Values="$SG_ID" | jq ".[] | .[] | select(.CidrIpv4==\"$THIS_IP/32\")")
-        echo $rule
         EXECUTE=false
         if [ "$ACTION" == "authorize" ]; then
           if [ -z "$rule" ]; then
@@ -55,9 +55,6 @@ runs:
           AWS_ACTION="revoke-security-group-ingress"
           MSG="Rule does not exist ..."
         fi
-        echo "OP: $OP"
-        echo "AWS_ACTION: $AWS_ACTION"
-        echo "MSG: $MSG"
         if [ $EXECUTE == true ]; then
           aws ec2 $AWS_ACTION --group-id $SG_ID --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$THIS_IP/32,Description=\"Created by Github Action.\"}]"
         else
