@@ -1,0 +1,70 @@
+name: 'AWS CLI'
+description: 'Automate basic aws cli commands.'
+inputs:
+  ACCESS_KEY:
+    description: 'AWS ACCESS KEY'
+    required: true
+  SECRET_ACCESS_KEY:
+    description: 'AWS SECRET ACCESS KEY'
+    required: true
+  REGION:
+    description: 'AWS Region'
+    required: true
+  TASK:
+    description: 'Trigger the functionallity that is provided by this action.'
+    required: true
+  ACTION:
+    description: 'What the cli will do'
+    required: true
+  IP:
+    description: 'The IP that need to be add/remove from security group'
+    required: false
+  SG_ID:
+    description: 'AWS Security group ID'
+    required: false
+outputs:
+  CLI_RESPONSE:
+    description: 'Return json response'
+    value: ${{ steps.security_group_rules.outputs.RESPONSE }}
+runs:
+  using: "composite"
+  steps:
+    - name: Setup credentials
+      id: setup_credentials
+      uses: aws_actions/configure_aws_credentials@v1
+      with:
+          aws-access-key-id: ${{ inputs.ACCESS_KEY }}
+          aws-secret-access-key: ${{ inputs.SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.REGION }}
+    - name: Update Scurity Group rules
+      id: security_group_rules
+      if: (inputs.TASK == 'security_group_rules') && (inputs.IP != '[]')
+      env:
+        IP: ${{ inputs.IP }}
+        SG_ID: ${{ inputs.IP }}
+        ACTION: ${{ inputs.ACTION }}
+      shell: bash
+      run: |
+        sudo apt install jq -y
+        rule=$(aws ec2 describe-security-group-rules --filter Name="group-id",Values="$SG_ID" | jq ".[] | .[] | select(.CidrIpv4==\"$IP/32\")")
+        if [ "$ACTION" == "authorize" ]; then
+          operator="-z"
+          aws_action="authorize-security-group-ingress"
+          MSG="Rule exists ..."
+        elif [ "$ACTION" == "revoke" ]; then
+          operator="-n"
+          aws_action="revoke-security-group-ingress"
+          MSG="Rule does not exist ..."
+        else
+          echo "ERROR: Wrong action defined"
+          echo "Supported actions are:"
+          echo "\t authorize"
+          echo "\t revoke"
+          exit 1
+        fi
+        if [ $operator "$rule" ]; then
+          aws ec2 $aws_action --group-id $SG_ID --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$IP/32,Description=\"Created by Github Action.\"}]"
+        else
+          echo "$MSG"
+        fi
+      
