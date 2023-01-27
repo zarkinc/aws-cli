@@ -29,7 +29,13 @@ runs:
         ACTION: ${{ inputs.ACTION }}
       shell: bash
       run: |
+        if [ "$IP" == "runner_ip" ]; then
+          THIS_IP=$(curl ifconfig.me)
+        else
+          THIS_IP="$IP"
+        fi
         sudo apt install jq -y
         echo "Security group id: $SG_ID"
-        echo "IP: $THIS_IP"
+        echo "IP: $IP"
+        echo "THIS_IP: $THIS_IP"
         echo "ACTION: $ACTION"
