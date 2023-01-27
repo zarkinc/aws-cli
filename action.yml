@@ -29,35 +29,7 @@ runs:
         ACTION: ${{ inputs.ACTION }}
       shell: bash
       run: |
-        if [ "$IP" == "runner_ip" ]; then
-          THIS_IP=`curl ifconfig.me`
-        else
-          THIS_IP=$IP
-        fi
         sudo apt install jq -y
         echo "Security group id: $SG_ID"
         echo "IP: $THIS_IP"
         echo "ACTION: $ACTION"
-        if [ "$ACTION" == "authorize" ]; then
-          OP="-z"
-          AWS_ACTION="authorize-security-group-ingress"
-          MSG="Rule exists ..."
-        #elif [ "$ACTION" == "revoke" ]; then
-        #  OP="-n"
-        #  AWS_ACTION="revoke-security-group-ingress"
-        #  MSG="Rule does not exist ..."
-        #else
-        #  echo "ERROR: Wrong action defined"
-        #  echo "Supported actions are:"
-        #  echo "\t authorize"
-        #  echo "\t revoke"
-        #  exit 1
-        fi
-        echo "$AWS_ACTION - $OP - $MSG"
-        #rule=$(aws ec2 describe-security-group-rules --filter Name="group-id",Values="$SG_ID" | jq ".[] | .[] | select(.CidrIpv4==\"$THIS_IP/32\")")
-	
-        #if [ $operator "$rule" ]; then
-        #  aws ec2 $aws_action --group-id $SG_ID --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$THIS_IP/32,Description=\"Created by Github Action.\"}]"
-        #else
-        #  echo "$MSG"
-        #fi
