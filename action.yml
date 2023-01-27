@@ -1,15 +1,6 @@
 name: 'AWS CLI'
 description: 'Automate basic aws cli commands.'
 inputs:
-  ACCESS_KEY:
-    description: 'AWS ACCESS KEY'
-    required: true
-  SECRET_ACCESS_KEY:
-    description: 'AWS SECRET ACCESS KEY'
-    required: true
-  REGION:
-    description: 'AWS Region'
-    required: true
   TASK:
     description: 'Trigger the functionallity that is provided by this action.'
     required: true
@@ -29,13 +20,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup credentials
-      id: setup_credentials
-      uses: aws_actions/configure_aws_credentials@v1
-      with:
-          aws-access-key-id: ${{ inputs.ACCESS_KEY }}
-          aws-secret-access-key: ${{ inputs.SECRET_ACCESS_KEY }}
-          aws-region: ${{ inputs.REGION }}
     - name: Update Scurity Group rules
       id: security_group_rules
       if: (inputs.TASK == 'security_group_rules') && (inputs.IP != '[]')
