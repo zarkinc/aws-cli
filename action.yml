@@ -49,3 +49,8 @@ runs:
         echo "OP: $OP"
         echo "AWS_ACTION: $AWS_ACTION"
         echo "MSG: $MSG"
+        if [ $operator "$rule" ]; then
+          aws ec2 $AWS_ACTION --group-id $SG_ID --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$THIS_IP/32,Description=\"Created by Github Action.\"}]"
+        else
+          echo "$MSG"
+        fi
