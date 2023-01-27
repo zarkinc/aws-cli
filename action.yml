@@ -41,15 +41,24 @@ runs:
         echo "ACTION: $ACTION"
         rule=$(aws ec2 describe-security-group-rules --filter Name="group-id",Values="$SG_ID" | jq ".[] | .[] | select(.CidrIpv4==\"$THIS_IP/32\")")
         echo $rule
+        EXECUTE=false
         if [ "$ACTION" == "authorize" ]; then
-          OP="-z"
+          if [ -z "$rule" ]; then
+            EXECUTE=true
+          fi
           AWS_ACTION="authorize-security-group-ingress"
           MSG="Rule exists ..."
+        elif [ "$ACTION" == "revoke" ]; then
+          if [ -n "$rule" ]; then
+            EXECUTE=true
+          fi
+          AWS_ACTION="revoke-security-group-ingress"
+          MSG="Rule does not exist ..."
         fi
         echo "OP: $OP"
         echo "AWS_ACTION: $AWS_ACTION"
         echo "MSG: $MSG"
-        if [ $operator "$rule" ]; then
+        if [ $EXECUTE == true ]; then
           aws ec2 $AWS_ACTION --group-id $SG_ID --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges="[{CidrIp=$THIS_IP/32,Description=\"Created by Github Action.\"}]"
         else
           echo "$MSG"
